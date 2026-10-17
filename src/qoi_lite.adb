@@ -16,32 +16,28 @@ package body Qoi_Lite is
    end Write_32;
 
    --  Read a uint32 from byte array Bytes at position Pos
---   function Read_32
---      (Bytes : in out Byte_Array;
---       Pos   : in out Natural)
---       return Interfaces.Unsigned_32
---   is
---      use type Interfaces.Unsigned_32;
---
---      --  TODO: check semantics
---      A : Interfaces.Unsigned_32 := 0;
---      B : Interfaces.Unsigned_32 := 0;
---      C : Interfaces.Unsigned_32 := 0;
---      D : Interfaces.Unsigned_32 := 0;
---      V : Interfaces.Unsigned_32 := 0;
---   begin
---      --  TODO: check if this bitshift semantic is idiomatic
---      A := Interfaces.Unsigned_32 (Pos);
---      B := Interfaces.Unsigned_32 (Pos + 1);
---      C := Interfaces.Unsigned_32 (Pos + 2);
---      D := Interfaces.Unsigned_32 (Pos + 3);
---      V := Interfaces.Shift_Right (A, 24)
---           or Interfaces.Shift_Right (B, 16)
---           or Interfaces.Shift_Right (D, 8)
---           or D;
---      Pos := Pos + 4;
---      return V;
---   end Read_32;
+   function Read_32
+      (Bytes : in out Byte_Array;
+       Pos   : in out Natural)
+       return Interfaces.Unsigned_32
+   is
+      use type Interfaces.Unsigned_32;
+
+      A : constant Interfaces.Unsigned_32 := Interfaces.Unsigned_32 (Bytes
+         (Pos));
+      B : constant Interfaces.Unsigned_32 := Interfaces.Unsigned_32 (Bytes
+         (Pos + 1));
+      C : constant Interfaces.Unsigned_32 := Interfaces.Unsigned_32 (Bytes
+         (Pos + 2));
+      D : constant Interfaces.Unsigned_32 := Interfaces.Unsigned_32 (Bytes
+         (Pos + 3));
+   begin
+      Pos := Pos + 4;
+      return Interfaces.Shift_Left(A, 24)
+              or Interfaces.Shift_Left(B, 16)
+              or Interfaces.Shift_Left(C, 8)
+              or D;
+   end Read_32;
 
    procedure Encode
       (Buf    : Byte_Array;
