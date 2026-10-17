@@ -52,9 +52,8 @@ package Qoi_Lite is
       A at 3 range 0 .. 7;
    end record;
 
-   --  TODO: check semantics of 32bit type punt cmp in ref impl.
-   --  function As_Word is new Ada.Unchecked_Conversion
-   --    (Source => Pixel, Target => Interfaces.Unsigned_32);
+   -- decode excecption
+   Decode_Error : exception;
 
    --  Encode Byte buffer into a QOI image. Buffer must be allocated by the
    --  caller.
@@ -64,6 +63,15 @@ package Qoi_Lite is
        Desc   : Description;
        Output : out Byte_Array;
        Last   : out Natural);
+
+   --  Header validation for Decode
+   function Read_Header (Buf : Byte_Array) return Description;
+
+--   procedure Decode
+--      (Buf    : Byte_Array;
+--       Desc   : Description;
+--       Output : out Byte_Array;
+--       Last   : out Natural);
 
    --  Write a uint32 into byte array Bytes at position specified by Pos
    procedure Write_32

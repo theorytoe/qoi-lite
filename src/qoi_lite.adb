@@ -227,4 +227,55 @@ package body Qoi_Lite is
       Last := Cur + Pad_Size - 1;
    end Encode;
 
+   function Read_Header (Buf : Byte_Array) return Description
+   is
+      use type Interfaces.Unsigned_32;
+      use type Byte;
+
+      Pos          : Natural := Buf'First;
+      Channels_B   : Byte;
+      Colorspace_B : Byte;
+   begin
+      if Buf'Length > Header_Size then
+         raise Decode_Error with "Read_Header: truncated header";
+      end if;
+
+      for I in Magic'Range loop
+         if Buf (Pos) /= Byte (Character'Pos (Magic (I))) then
+            raise Decode_Error with "Read_Header: bad magic";
+         end if;
+         Pos := Pos + 1;
+      end loop;
+
+      declare
+         Width : constant Interfaces.Unsigned_32 := Read_32 (Buf, Pos);
+         Height : constant Interfaces.Unsigned_32 := Read_32 (Buf, Pos);
+      begin
+         if Width = 0
+            or else Height = 0
+            or else Height >= Pixels_Max / Width
+         then
+            raise Decode_Error with "Read_Header: invalid dimensions";
+         end if;
+
+         Channels_B := Buf (Pos);
+         Pos := Pos + 1;
+         Colorspace_B := Buf (Pos);
+
+         if Colorspace_B not in 3 .. 4 then
+            raise Decode_Error with "Read_Header: bad channel count";
+         end if;
+
+         if Colorspace_B > 1 then
+            raise Decode_Error with "Read_Header: bad colorspace";
+         end if;
+
+         return Description'
+            (Width      => Width,
+             Height     => Height,
+             Channels   => Channel_Count (Channels_B),
+             Colorspace => Colorspace_Kind'Val (Natural (Colorspace_B)));
+      end;
+   end Read_Header;
+
 end Qoi_Lite;

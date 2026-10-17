@@ -9,7 +9,7 @@ licenses = "ISC"
 website = ""
 tags = []
 
-executables = ["tests"]
+executables = ["tests", "test_read_header"]
 
 [[depends-on]]
 qoi_lite = "*"
