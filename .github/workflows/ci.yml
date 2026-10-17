@@ -33,3 +33,16 @@ jobs:
       #  on any failing check (the runner exits 1 on failure).
       - name: Test
         run: alr test
+
+      #  alr test writes results only to its log file, so surface it:
+      #  printed into the step log (folded) and saved as an artifact.
+      - name: Show test log
+        if: always()
+        run: |
+          if [ -f alire/alr_test_local.log ]; then
+            echo "::group::Test log (alire/alr_test_local.log)"
+            cat alire/alr_test_local.log
+            echo "::endgroup::"
+          else
+            echo "No test log produced"
+          fi
