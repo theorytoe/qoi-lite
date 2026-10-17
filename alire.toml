@@ -1,0 +1,10 @@
+name = "qoi"
+description = "encoder/decoder for the QOI image format"
+version = "0.1.0-dev"
+
+authors = ["theorytoe"]
+maintainers = ["theorytoe <theory@theoryware.net>"]
+maintainers-logins = ["theorytoe"]
+licenses = "ISC"
+website = ""
+tags = ["image", "qoi"]
