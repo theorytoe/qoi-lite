@@ -8,3 +8,8 @@ maintainers-logins = ["theorytoe"]
 licenses = "ISC"
 website = ""
 tags = ["image", "qoi"]
+
+[[actions]]
+type = "test"
+directory = "tests"
+command = ["alr", "run"]
