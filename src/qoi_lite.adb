@@ -236,7 +236,7 @@ package body Qoi_Lite is
       Channels_B   : Byte;
       Colorspace_B : Byte;
    begin
-      if Buf'Length > Header_Size then
+      if Buf'Length < Header_Size then
          raise Decode_Error with "Read_Header: truncated header";
       end if;
 
@@ -262,7 +262,7 @@ package body Qoi_Lite is
          Pos := Pos + 1;
          Colorspace_B := Buf (Pos);
 
-         if Colorspace_B not in 3 .. 4 then
+         if Channels_B not in 3 .. 4 then
             raise Decode_Error with "Read_Header: bad channel count";
          end if;
 
