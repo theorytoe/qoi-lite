@@ -12,7 +12,7 @@ tags = []
 executables = ["tests"]
 
 [[depends-on]]
-qoi = "~0.1.0"
+qoi_lite = "*"
 
 [[pins]]
-qoi = { path='..' }
+qoi_lite = { path='..' }

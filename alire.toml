@@ -1,5 +1,5 @@
-name = "qoi"
-description = "encoder/decoder for the QOI image format"
+name = "qoi_lite"
+description = "Lightweight encoder/decoder for the QOI image format"
 version = "0.1.0-dev"
 
 authors = ["theorytoe"]

@@ -1,5 +1,5 @@
 with Interfaces;
-package Qoi is
+package Qoi_Lite is
 
    --  Basic Types
    subtype Byte is Interfaces.Unsigned_8;
@@ -15,7 +15,7 @@ package Qoi is
 
    type Channel_Count is new Byte range 3 .. 4;
 
-   --  Qoi header definition
+   --  QOI header definition
    type Description is record
       Width      : Interfaces.Unsigned_32;
       Height     : Interfaces.Unsigned_32;
@@ -23,7 +23,7 @@ package Qoi is
       Colorspace : Colorspace_Kind;
    end record;
 
-   --  Qoi Chunk Tags
+   --  QOI Chunk Tags
    Op_Index : constant Byte := 2#00_000000#;  --  00xxxxxx
    Op_Diff  : constant Byte := 2#01_000000#;  --  01xxxxxx
    Op_Luma  : constant Byte := 2#10_000000#;  --  10xxxxxx
@@ -56,7 +56,7 @@ package Qoi is
    --  function As_Word is new Ada.Unchecked_Conversion
    --    (Source => Pixel, Target => Interfaces.Unsigned_32);
 
-   --  Encode Byte buffer into Qoi Image. Buffer must be allocated by the
+   --  Encode Byte buffer into a QOI image. Buffer must be allocated by the
    --  caller.
    --  note: near identical to ref impl
    procedure Encode
@@ -77,4 +77,4 @@ package Qoi is
 --       Pos   : in out Natural)
 --       return Interfaces.Unsigned_32;
 
-end Qoi;
+end Qoi_Lite;

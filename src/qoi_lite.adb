@@ -1,4 +1,4 @@
-package body Qoi is
+package body Qoi_Lite is
 
    --  Write a uint32 into byte array Bytes at position specified by Pos
    procedure Write_32
@@ -231,4 +231,4 @@ package body Qoi is
       Last := Cur + Pad_Size - 1;
    end Encode;
 
-end Qoi;
+end Qoi_Lite;
