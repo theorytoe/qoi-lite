@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      #  Check out the repository
+      - uses: actions/checkout@v4
+
+      #  Install alr and the GNAT toolchain.  Pinned to the same alr
+      #  version used locally; the toolchain expression selects the
+      #  newest stable gnat_native and gprbuild from the community index.
+      - name: Set up Alire
+        uses: alire-project/setup-alire@v5
+        with:
+          version: '2.1.1'
+          toolchain: 'gnat_native gprbuild'
+          cache: true
+
+      #  Build the library crate
+      - name: Build
+        run: alr build
+
+      #  Run the test suite via the [[actions]] type = "test" hook,
+      #  which builds and runs the nested tests/ crate.  Fails the job
+      #  on any failing check (the runner exits 1 on failure).
+      - name: Test
+        run: alr test
