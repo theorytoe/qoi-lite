@@ -17,7 +17,7 @@ package body Qoi_Lite is
 
    --  Read a uint32 from byte array Bytes at position Pos
    function Read_32
-      (Bytes : in out Byte_Array;
+      (Bytes : Byte_Array;
        Pos   : in out Natural)
        return Interfaces.Unsigned_32
    is
