@@ -17,9 +17,9 @@ command = ["alr", "build"]
 [[actions]]
 type = "test"
 directory = "tests"
-command = ["./bin/tests"]
+command = ["./bin/test_encode"]
 
 [[actions]]
 type = "test"
 directory = "tests"
-command = ["./bin/test_read_header"]
+command = ["./bin/test_decode"]
