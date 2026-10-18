@@ -33,9 +33,9 @@ package body Qoi_Lite is
          (Pos + 3));
    begin
       Pos := Pos + 4;
-      return Interfaces.Shift_Left(A, 24)
-              or Interfaces.Shift_Left(B, 16)
-              or Interfaces.Shift_Left(C, 8)
+      return Interfaces.Shift_Left (A, 24)
+              or Interfaces.Shift_Left (B, 16)
+              or Interfaces.Shift_Left (C, 8)
               or D;
    end Read_32;
 
@@ -61,10 +61,8 @@ package body Qoi_Lite is
       Pad : constant Byte_Array (1 .. Pad_Size) :=
          (1 .. Pad_Size - 1 => 0, Pad_Size => Byte (1));
 
-      subtype Slot_Index is Natural range 0 .. 63;
-
       --  Zeroed index array
-      Index : array (Slot_Index) of Pixel := (others => Zero_Pixel);
+      Index : Pixel_Table := (others => Zero_Pixel);
 
       Cur     : Integer := Output'First;
       Run     : Natural := 0;
@@ -83,15 +81,6 @@ package body Qoi_Lite is
          Buf (Cur) := B;
          Cur := Cur + 1;
       end Put;
-
-      --  Hash fn
-      --  TODO: maybe move me to toplevel
-      function Color_Hash (P : Pixel) return Slot_Index is
-         (Slot_Index ((Interfaces.Unsigned_32 (P.R) * 3
-            + Interfaces.Unsigned_32 (P.G) * 5
-            + Interfaces.Unsigned_32 (P.B) * 7
-            + Interfaces.Unsigned_32 (P.A) * 11)
-            and 16#3F#));
 
       --  Wrap a channel delta into the signed 8-bit range: the reference
       --  computes deltas in signed char, so 255 - 0 is -1, not +255, and
@@ -277,5 +266,126 @@ package body Qoi_Lite is
              Colorspace => Colorspace_Kind'Val (Natural (Colorspace_B)));
       end;
    end Read_Header;
+
+   procedure Decode
+      (Buf    : Byte_Array;
+       Desc   : out Description;
+       Output : out Byte_Array;
+       Last   : out Natural)
+   is
+      use type Interfaces.Unsigned_32;
+      use type Byte;
+
+      Pos     : Natural := Buf'First + Header_Size;
+      Out_Pos : Natural := Output'First;
+      Run     : Natural := 0;
+      Px      : Pixel := (R => 0, G => 0, B => 0, A => 255);
+
+      Index : Pixel_Table := (others => Zero_Pixel);
+
+      --  Drop end pad for chunks
+      Chunks_Last : constant Natural := Buf'Last - Pad_Size;
+
+      --  Read one byte at Pos and advance
+      procedure Get
+         (Pos : in out Natural;
+          Buf : Byte_Array;
+          B   : out Byte)
+      is
+      begin
+         B := Buf (Pos);
+         Pos := Pos + 1;
+      end Get;
+   begin
+
+      --  Read_Header handles (most) of validation
+      Desc := Read_Header (Buf);
+
+      declare
+         Px_Count : constant Integer :=
+            Integer (Desc.Width) * Integer (Desc.Height);
+         Stride : constant Integer := Integer (Desc.Channels);
+      begin
+         if Output'Length < Px_Count * Stride then
+            raise Constraint_Error with "Decode: output buffer too small";
+         end if;
+
+         --  eat chunks
+         for P in 1 .. Px_Count loop
+            if Run > 0 then
+               Run := Run - 1;
+            elsif Pos <= Chunks_Last then
+               declare  --  {{{
+                  B1 : Byte;
+               begin
+                  Get (Pos, Buf, B1);
+
+                  --  Full byte tag
+                  if B1 = Op_RGB or else B1 = Op_RGBA then
+                     Get (Pos, Buf, Px.R);
+                     Get (Pos, Buf, Px.G);
+                     Get (Pos, Buf, Px.B);
+                     if B1 = Op_RGBA then
+                        Get (Pos, Buf, Px.A);
+                     end if;
+
+                     --  All non-run ops store into the index table
+                     Index (Color_Hash (Px)) := Px;
+
+                  else
+                     --  Nibble tag
+                     case B1 and Mask2 is
+                        when Op_Index =>
+                           Px := Index (Slot_Index (B1 and 16#3F#));
+                        when Op_Diff =>
+                           Px.R := Px.R
+                              + (Interfaces.Shift_Right (B1, 4)
+                              and 16#03#) - 2;
+                           Px.G := Px.G
+                              + (Interfaces.Shift_Right (B1, 2)
+                              and 16#03#) - 2;
+                           Px.B := Px.B + (B1 and 16#03#) - 2;
+                        when Op_Luma =>
+                           declare
+                              B2 : Byte;
+                              Vg : constant Integer :=
+                                 Integer (B1 and 16#3F#) - 32;
+                              Vr : Integer;
+                              Vb : Integer;
+                           begin
+                              Get (Pos, Buf, B2);
+                              Vr := Integer (Interfaces.Shift_Right
+                                 (B2, 4)) - 8;
+                              Vb := Integer (B2 and 16#0F#) - 8;
+                              Px.R := Byte (Integer (Px.R) + Vg + Vr);
+                              Px.G := Byte (Integer (Px.G) + Vg);
+                              Px.B := Byte (Integer (Px.B) + Vg + Vb);
+                           end;
+                        when Op_Run =>
+                           Run := Natural (B1 and 16#3F#);
+                        when others => null; --  TODO: maybe throw error???
+                     end case;
+
+                     --  Runs repeat the previous pixel: no index store
+                     if (B1 and Mask2) /= Op_Run then
+                        Index (Color_Hash (Px)) := Px;
+                     end if;
+                  end if;
+               end;  --  }}}
+            end if;
+
+            --  write px
+            Output (Out_Pos)     := Px.R;
+            Output (Out_Pos + 1) := Px.G;
+            Output (Out_Pos + 2) := Px.B;
+            if Desc.Channels = 4 then
+               Output (Out_Pos + 3) := Px.A;
+            end if;
+            Out_Pos := Out_Pos + Stride;
+         end loop;
+
+         Last := Out_Pos - 1;
+      end;
+   end Decode;
 
 end Qoi_Lite;

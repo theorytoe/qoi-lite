@@ -31,7 +31,7 @@ package Qoi_Lite is
    Op_RGB   : constant Byte := 2#1111_1110#;  --  11111110
    Op_RGBA  : constant Byte := 2#1111_1111#;  --  11111111
 
-   MMask    : constant Byte := 2#11_000000#;
+   Mask2    : constant Byte := 2#11_000000#;
 
    --  File Header Magic Bytes
    Magic    : constant String := "qoif";
@@ -52,8 +52,18 @@ package Qoi_Lite is
       A at 3 range 0 .. 7;
    end record;
 
-   -- decode excecption
+   --  decode exception
    Decode_Error : exception;
+
+   --  Buf pix rep.
+   subtype Slot_Index is Natural range 0 .. 63;
+   type Pixel_Table is array (Slot_Index) of Pixel;
+
+   Zero_Pixel : constant Pixel := (0, 0, 0, 0);
+
+   function Color_Hash (P : Pixel) return Slot_Index is
+      (Slot_Index ((Natural (P.R) * 3 + Natural (P.G) * 5
+         + Natural (P.B) * 7 + Natural (P.A) * 11) mod 64));
 
    --  Encode Byte buffer into a QOI image. Buffer must be allocated by the
    --  caller.
@@ -67,11 +77,11 @@ package Qoi_Lite is
    --  Header validation for Decode
    function Read_Header (Buf : Byte_Array) return Description;
 
---   procedure Decode
---      (Buf    : Byte_Array;
---       Desc   : Description;
---       Output : out Byte_Array;
---       Last   : out Natural);
+   procedure Decode
+      (Buf    : Byte_Array;
+       Desc   : out Description;
+       Output : out Byte_Array;
+       Last   : out Natural);
 
    --  Write a uint32 into byte array Bytes at position specified by Pos
    procedure Write_32
