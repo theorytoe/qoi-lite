@@ -357,9 +357,11 @@ package body Qoi_Lite is
                               Vr := Integer (Interfaces.Shift_Right
                                  (B2, 4)) - 8;
                               Vb := Integer (B2 and 16#0F#) - 8;
-                              Px.R := Byte (Integer (Px.R) + Vg + Vr);
-                              Px.G := Byte (Integer (Px.G) + Vg);
-                              Px.B := Byte (Integer (Px.B) + Vg + Vb);
+                              Px.R :=
+                                 Byte ((Integer (Px.R) + Vg + Vr) mod 256);
+                              Px.G := Byte ((Integer (Px.G) + Vg) mod 256);
+                              Px.B :=
+                                 Byte ((Integer (Px.B) + Vg + Vb) mod 256);
                            end;
                         when Op_Run =>
                            Run := Natural (B1 and 16#3F#);
